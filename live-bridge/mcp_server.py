@@ -8,12 +8,15 @@ Zero third-party deps: implements the MCP stdio protocol by hand using only the
 standard library, so it runs on any Python 3 without `pip install`.
 """
 
+import os
 import sys
 import json
 import urllib.request
 import urllib.error
 
-BRIDGE_URL = "http://127.0.0.1:5005/"
+# Where the in-Pro add-in bridge listens. Override with ARCGIS_BRIDGE_URL when the
+# server and ArcGIS Pro are on different hosts (e.g. running this in a container).
+BRIDGE_URL = os.environ.get("ARCGIS_BRIDGE_URL", "http://127.0.0.1:5005/")
 
 
 def log(msg):
