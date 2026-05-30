@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cli-anything-arcgis-pro"
+version = "0.1.0"
+description = "Agent-native CLI for ArcGIS Pro (ArcPy): professional cartography, geoprocessing, data query/edit — plus a live-Pro MCP bridge."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Jasper0122" }]
+keywords = ["arcgis", "arcgis-pro", "arcpy", "gis", "cli", "agent", "mcp", "cli-anything", "cartography", "geoprocessing"]
+dependencies = ["click>=8.0"]
+
+# NOTE: arcpy is intentionally NOT a dependency. It is provided by a licensed
+# ArcGIS Pro install (run this package with its `arcgispro-py3` Python).
+
+[project.urls]
+Homepage = "https://github.com/Jasper0122/CLI-Anything-Arcgis-Pro"
+Repository = "https://github.com/Jasper0122/CLI-Anything-Arcgis-Pro"
+
+[project.scripts]
+cli-anything-arcgis-pro = "cli_anything_arcgis_pro.__main__:cli"
+
+[tool.setuptools]
+packages = ["cli_anything_arcgis_pro"]

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ArcGIS defaultAssembly="ProSimpleMapExport.dll"
+        defaultNamespace="ProSimpleMapExport"
+        xmlns="http://schemas.esri.com/DADF/Registry"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
+
+  <AddInInfo id="{3a1b9c4e-7d2f-4b6a-9e1c-8f5a2d3b4c6e}" version="1.9" desktopVersion="3.4">
+    <Name>ProSimpleMapExport</Name>
+    <Description>一键把当前布局导出为 300dpi PDF</Description>
+    <Image>Images\AddinDesktop32.png</Image>
+    <Author>zongrong</Author>
+    <Company>TAMU</Company>
+    <Date>2026-05-29</Date>
+    <Subject>Layout</Subject>
+  </AddInInfo>
+
+  <modules>
+    <insertModule id="ProSimpleMapExport_Module" className="Module1" autoLoad="true" caption="出图模块">
+      <!-- A new ribbon tab to host the button -->
+      <tabs>
+        <tab id="ProSimpleMapExport_Tab1" caption="出图工具">
+          <group refID="ProSimpleMapExport_Group1" />
+        </tab>
+      </tabs>
+      <groups>
+        <group id="ProSimpleMapExport_Group1" caption="布局导出" appearsOnAddInTab="false">
+          <button refID="ProSimpleMapExport_ExportLayoutButton" size="large" />
+        </group>
+      </groups>
+      <controls>
+        <button id="ProSimpleMapExport_ExportLayoutButton"
+                caption="导出 PDF"
+                className="ExportLayoutButton"
+                loadOnClick="true"
+                keytip="EP">
+          <tooltip heading="导出当前布局">
+            把当前活动布局（或工程第一个布局）导出为 300dpi PDF。<disabledText />
+          </tooltip>
+        </button>
+      </controls>
+    </insertModule>
+  </modules>
+
+</ArcGIS>

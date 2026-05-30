@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.venv/
+
+# .NET / ArcGIS Pro add-in build output
+live-bridge/ProSimpleMapExport/bin/
+live-bridge/ProSimpleMapExport/obj/
+*.esriAddinX
+
+# Local bridge runtime artifacts
+_bridge.log
+*_export.pdf

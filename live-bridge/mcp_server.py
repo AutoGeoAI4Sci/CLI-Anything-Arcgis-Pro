@@ -1,0 +1,232 @@
+"""MCP server bridging Claude Code to the LIVE ArcGIS Pro session.
+
+Architecture:
+    Claude Code  --stdio JSON-RPC-->  this server  --HTTP-->  ProSimpleMapExport
+    add-in (inside ArcGIS Pro, 127.0.0.1:5005)  -->  live project (QueuedTask).
+
+Zero third-party deps: implements the MCP stdio protocol by hand using only the
+standard library, so it runs on any Python 3 without `pip install`.
+"""
+
+import sys
+import json
+import urllib.request
+import urllib.error
+
+BRIDGE_URL = "http://127.0.0.1:5005/"
+
+
+def log(msg):
+    print(f"[arcgis-mcp] {msg}", file=sys.stderr, flush=True)
+
+
+def call_bridge(payload, timeout=180):
+    """POST a command to the in-Pro bridge and return its parsed JSON."""
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        BRIDGE_URL, data=data, headers={"Content-Type": "application/json"}
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.URLError as e:
+        return {
+            "ok": False,
+            "error": (
+                f"无法连接 ArcGIS Pro 桥 ({BRIDGE_URL}): {e}. "
+                "请确认 ArcGIS Pro 正在运行且已加载 ProSimpleMapExport add-in。"
+            ),
+        }
+    except Exception as e:  # noqa: BLE001
+        return {"ok": False, "error": f"桥调用失败: {e}"}
+
+
+TOOLS = [
+    {
+        "name": "arcgis_ping",
+        "description": (
+            "读取当前打开的 ArcGIS Pro 工程状态：工程名、所有地图、所有布局、"
+            "以及当前活动的地图/布局。发其它命令前先用它了解打开的是什么工程。"
+        ),
+        "inputSchema": {"type": "object", "properties": {}, "required": []},
+    },
+    {
+        "name": "arcgis_export_layout",
+        "description": (
+            "把活着的 ArcGIS Pro 工程里的某个布局导出为 PDF。导出在用户正开着的 "
+            "Pro 实例内执行（用户能看到），返回输出路径与文件大小。"
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "out": {
+                    "type": "string",
+                    "description": r"输出 PDF 的绝对路径，例如 C:\temp\map.pdf",
+                },
+                "layout": {
+                    "type": "string",
+                    "description": "布局名（可选；缺省用活动布局，否则用第一个布局）。",
+                },
+                "dpi": {"type": "integer", "description": "分辨率 DPI（默认 300）。"},
+            },
+            "required": ["out"],
+        },
+    },
+    {
+        "name": "arcgis_zoom_to",
+        "description": (
+            "把活动地图视图缩放到某个要素图层（用户能在窗口里看到地图动）。"
+            "可选 where 条件：会先选中匹配要素再缩放到选集。需要 Pro 当前处于地图视图（非布局）。"
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "layer": {"type": "string", "description": "要缩放到的要素图层名。"},
+                "where": {
+                    "type": "string",
+                    "description": "可选 SQL 条件，如 \"POP > 1000\"；给了就缩放到选中要素。",
+                },
+            },
+            "required": ["layer"],
+        },
+    },
+    {
+        "name": "arcgis_query",
+        "description": (
+            "查询活工程里某要素图层的属性，返回结构化的行（不含几何）。可按 where 过滤、限制行数。"
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "layer": {"type": "string", "description": "要素图层名。"},
+                "where": {"type": "string", "description": "可选 SQL where 条件。"},
+                "map": {"type": "string", "description": "可选地图名（缺省用活动/第一个地图）。"},
+                "limit": {"type": "integer", "description": "最多返回多少行（默认 50，0=不限）。"},
+            },
+            "required": ["layer"],
+        },
+    },
+    {
+        "name": "arcgis_run_gp",
+        "description": (
+            "在活工程上运行任意 ArcGIS 地理处理工具（整个 ArcToolbox：分析/管理/转换/栅格…）。"
+            "输出图层会自动加到当前地图（用户能看到）。tool 用点号写法如 'analysis.Buffer'、"
+            "'management.Clip'；params 是按工具签名顺序排列的位置参数字符串数组。"
+            "例：tool='analysis.Buffer'，params=['roads','roads_buf','100 Meters']。"
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "tool": {
+                    "type": "string",
+                    "description": "工具名，点号写法，如 analysis.Buffer / management.Dissolve / sa.Slope。",
+                },
+                "params": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": (
+                        "按工具参数顺序的位置参数（字符串）。"
+                        "输入/输出强烈建议用数据集全路径（如 C:\\...\\x.gdb\\fc），"
+                        "图层名在后台 GP 里解析不可靠。距离等参数如 '500 Meters'。"
+                    ),
+                },
+            },
+            "required": ["tool", "params"],
+        },
+    },
+]
+
+
+def handle(req):
+    method = req.get("method")
+    rid = req.get("id")
+
+    if method == "initialize":
+        client_ver = (req.get("params") or {}).get("protocolVersion", "2024-11-05")
+        return ok(rid, {
+            "protocolVersion": client_ver,
+            "capabilities": {"tools": {}},
+            "serverInfo": {"name": "arcgis-pro-bridge", "version": "1.0.0"},
+        })
+
+    if method in ("notifications/initialized", "initialized"):
+        return None  # notification, no response
+
+    if method == "ping":
+        return ok(rid, {})
+
+    if method == "tools/list":
+        return ok(rid, {"tools": TOOLS})
+
+    if method == "tools/call":
+        params = req.get("params") or {}
+        name = params.get("name")
+        args = params.get("arguments") or {}
+        command_map = {
+            "arcgis_ping": "ping",
+            "arcgis_export_layout": "export_layout",
+            "arcgis_zoom_to": "zoom_to",
+            "arcgis_query": "query",
+            "arcgis_run_gp": "run_gp",
+        }
+        cmd = command_map.get(name)
+        if cmd is None:
+            return err(rid, -32601, f"unknown tool: {name}")
+        payload = {"command": cmd}
+        payload.update(args)
+        result = call_bridge(payload)
+        text = json.dumps(result, ensure_ascii=False, indent=2)
+        return ok(rid, {
+            "content": [{"type": "text", "text": text}],
+            "isError": not result.get("ok", False),
+        })
+
+    if rid is not None:
+        return err(rid, -32601, f"method not found: {method}")
+    return None
+
+
+def ok(rid, result):
+    return {"jsonrpc": "2.0", "id": rid, "result": result}
+
+
+def err(rid, code, message):
+    return {"jsonrpc": "2.0", "id": rid, "error": {"code": code, "message": message}}
+
+
+# BOM / zero-width codepoints some pipes prepend to the first line.
+_BOM_CODEPOINTS = (0xFEFF, 0xFFFE, 0x200B)
+
+
+def main():
+    # Claude Code speaks UTF-8 over stdio. On a non-UTF-8 locale (e.g. Chinese GBK)
+    # Python would otherwise mis-decode the stream — force UTF-8 both ways.
+    try:
+        sys.stdin.reconfigure(encoding="utf-8")
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+    log(f"started, bridging to {BRIDGE_URL}")
+    for raw in sys.stdin:
+        line = raw.strip()
+        while line and ord(line[0]) in _BOM_CODEPOINTS:
+            line = line[1:]
+        if not line:
+            continue
+        try:
+            req = json.loads(line)
+        except Exception as e:  # noqa: BLE001
+            log(f"bad json: {e}")
+            continue
+        try:
+            resp = handle(req)
+        except Exception as e:  # noqa: BLE001
+            rid = req.get("id")
+            resp = err(rid, -32603, str(e)) if rid is not None else None
+        if resp is not None:
+            sys.stdout.write(json.dumps(resp) + "\n")
+            sys.stdout.flush()
+
+
+if __name__ == "__main__":
+    main()

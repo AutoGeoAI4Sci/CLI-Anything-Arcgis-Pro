@@ -1,0 +1,79 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    ArcGIS Pro Add-in (Module) — targets ArcGIS Pro 3.4 (.NET 8).
+    Builds with ONLY the .NET 8 SDK installed:  dotnet build -c Release
+    The PackageAddIn target below zips the output into ProSimpleMapExport.esriAddinX.
+    Visual Studio + the ArcGIS Pro SDK VSIX are optional (templates / F5 debugging).
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <OutputType>Library</OutputType>
+    <RootNamespace>ProSimpleMapExport</RootNamespace>
+    <AssemblyName>ProSimpleMapExport</AssemblyName>
+    <Platforms>AnyCPU</Platforms>
+    <Nullable>disable</Nullable>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+
+    <!-- Where ArcGIS Pro is installed. Auto-set by the Pro SDK if present; otherwise fall back. -->
+    <ArcGISProInstallDir Condition="'$(ArcGISProInstallDir)' == ''">C:\Program Files\ArcGIS\Pro\</ArcGISProInstallDir>
+  </PropertyGroup>
+
+  <!-- Pro provides these at runtime; reference them but do NOT copy them locally (Private=false). -->
+  <ItemGroup>
+    <Reference Include="ArcGIS.Core">
+      <HintPath>$(ArcGISProInstallDir)bin\ArcGIS.Core.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Framework">
+      <HintPath>$(ArcGISProInstallDir)bin\ArcGIS.Desktop.Framework.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Core">
+      <HintPath>$(ArcGISProInstallDir)bin\Extensions\Core\ArcGIS.Desktop.Core.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Mapping">
+      <HintPath>$(ArcGISProInstallDir)bin\Extensions\Mapping\ArcGIS.Desktop.Mapping.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Layouts">
+      <HintPath>$(ArcGISProInstallDir)bin\Extensions\Layout\ArcGIS.Desktop.Layouts.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Catalog">
+      <HintPath>$(ArcGISProInstallDir)bin\Extensions\Catalog\ArcGIS.Desktop.Catalog.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Config.daml must ship inside the add-in package; keep it beside the build for packaging. -->
+  <ItemGroup>
+    <None Update="Config.daml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <!-- Package the compiled output + Config.daml into a .esriAddinX (a plain zip). -->
+  <Target Name="PackageAddIn" AfterTargets="Build">
+    <PropertyGroup>
+      <Staging>$(OutDir)__addin</Staging>
+      <ZipPath>$(OutDir)$(AssemblyName).zip</ZipPath>
+      <AddInPath>$(OutDir)$(AssemblyName).esriAddinX</AddInPath>
+    </PropertyGroup>
+    <RemoveDir Directories="$(Staging)" />
+    <MakeDir Directories="$(Staging)" />
+    <MakeDir Directories="$(Staging)\Install" />
+    <!-- Pro reads Config.daml from the package ROOT for the declarative UI... -->
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\Config.daml" DestinationFolder="$(Staging)" />
+    <!-- ...but loads the backing assembly from the Install\ subfolder. -->
+    <Copy SourceFiles="$(OutDir)$(AssemblyName).dll" DestinationFolder="$(Staging)\Install" />
+    <Copy SourceFiles="$(OutDir)$(AssemblyName).pdb" DestinationFolder="$(Staging)\Install" Condition="Exists('$(OutDir)$(AssemblyName).pdb')" />
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;Compress-Archive -Path '$(Staging)\*' -DestinationPath '$(ZipPath)' -Force; Move-Item -LiteralPath '$(ZipPath)' -Destination '$(AddInPath)' -Force&quot;" />
+    <Message Importance="high" Text="Add-in packaged: $(AddInPath)" />
+  </Target>
+
+</Project>
