@@ -17,7 +17,7 @@ wraps ArcGIS Pro's **official ArcPy / Pro SDK** instead, in two complementary mo
 
 A complete workflow driven live by an agent — **data → clip → analysis → finished map** — inside ArcGIS Pro through the MCP bridge:
 
-<video src="https://github.com/user-attachments/assets/bdf3b159-f2db-41bc-b7e3-ed05253062de" controls muted width="100%" style="max-height:360px"></video>
+<video src="https://github.com/user-attachments/assets/c1416209-f2bc-4d14-83a4-0d1f37b8f24c" controls muted width="100%" style="max-height:360px"></video>
 
 ## Why two modes
 

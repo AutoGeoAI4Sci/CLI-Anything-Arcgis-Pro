@@ -1,0 +1,249 @@
+{
+  "nodes": [
+    {
+      "id": "title0000000001",
+      "type": "text",
+      "x": -40,
+      "y": -180,
+      "width": 860,
+      "height": 90,
+      "color": "6",
+      "text": "# CLI-Anything - ArcGIS Pro\nCode implementation flow"
+    },
+
+    {
+      "id": "grpA0000000001",
+      "type": "group",
+      "x": -60,
+      "y": -40,
+      "width": 840,
+      "height": 1020,
+      "color": "5",
+      "label": "Live bridge + MCP  --  drive the OPEN ArcGIS Pro session"
+    },
+    {
+      "id": "nodeA1000000001",
+      "type": "text",
+      "x": 20,
+      "y": 30,
+      "width": 360,
+      "height": 80,
+      "color": "6",
+      "text": "**Agent (Claude)**\nMCP client"
+    },
+    {
+      "id": "nodeA2000000001",
+      "type": "text",
+      "x": 20,
+      "y": 160,
+      "width": 360,
+      "height": 95,
+      "text": "**mcp_server.py**\nstdlib MCP server (stdio JSON-RPC)\nforces UTF-8, forwards tool calls"
+    },
+    {
+      "id": "nodeA3000000001",
+      "type": "text",
+      "x": 20,
+      "y": 305,
+      "width": 360,
+      "height": 70,
+      "color": "5",
+      "text": "**HTTP POST -> 127.0.0.1:5005**\nJSON command body"
+    },
+    {
+      "id": "nodeA4000000001",
+      "type": "text",
+      "x": 20,
+      "y": 425,
+      "width": 360,
+      "height": 105,
+      "text": "**BridgeServer.cs**  *(inside ArcGIS Pro)*\nTcpListener on loopback\ndispatch by command name"
+    },
+    {
+      "id": "nodeA5000000001",
+      "type": "text",
+      "x": 20,
+      "y": 580,
+      "width": 360,
+      "height": 80,
+      "text": "**QueuedTask.Run**\nmarshal to the main CIM thread"
+    },
+    {
+      "id": "nodeA6000000001",
+      "type": "text",
+      "x": 20,
+      "y": 710,
+      "width": 360,
+      "height": 100,
+      "color": "4",
+      "text": "**Live ArcGIS Pro project**\nMap + Layout update on screen\n*(user watches)*"
+    },
+    {
+      "id": "nodeA7000000001",
+      "type": "text",
+      "x": 430,
+      "y": 425,
+      "width": 300,
+      "height": 105,
+      "color": "5",
+      "text": "**MCP tools**\nping / zoom_to / query\nrun_gp / export_layout"
+    },
+
+    {
+      "id": "grpB0000000001",
+      "type": "group",
+      "x": 900,
+      "y": -40,
+      "width": 800,
+      "height": 1020,
+      "label": "Headless CLI  --  batch / automation (no GUI)"
+    },
+    {
+      "id": "nodeB1000000001",
+      "type": "text",
+      "x": 960,
+      "y": 30,
+      "width": 340,
+      "height": 80,
+      "color": "6",
+      "text": "**Agent / shell**"
+    },
+    {
+      "id": "nodeB2000000001",
+      "type": "text",
+      "x": 960,
+      "y": 160,
+      "width": 340,
+      "height": 90,
+      "text": "**cli-anything-arcgis-pro** -> `main()`\nconsole entry point"
+    },
+    {
+      "id": "nodeB3000000001",
+      "type": "text",
+      "x": 960,
+      "y": 300,
+      "width": 340,
+      "height": 90,
+      "color": "3",
+      "text": "**Is `arcpy` importable here?**\n(decision)"
+    },
+    {
+      "id": "nodeB3a00000001",
+      "type": "text",
+      "x": 1360,
+      "y": 300,
+      "width": 300,
+      "height": 90,
+      "color": "2",
+      "text": "**re-dispatch**\nto ArcGIS Pro's `arcgispro-py3`\n(found via paths / registry)"
+    },
+    {
+      "id": "nodeB4000000001",
+      "type": "text",
+      "x": 960,
+      "y": 440,
+      "width": 340,
+      "height": 100,
+      "text": "**click group -> `cmd_*`**\ninfo / project / layout\ndata / gp / batch"
+    },
+    {
+      "id": "nodeB5000000001",
+      "type": "text",
+      "x": 960,
+      "y": 590,
+      "width": 340,
+      "height": 70,
+      "text": "**arcpy**  (ArcPy / Pro SDK)"
+    },
+    {
+      "id": "nodeB6000000001",
+      "type": "text",
+      "x": 960,
+      "y": 710,
+      "width": 340,
+      "height": 85,
+      "color": "4",
+      "text": "**.aprx project / geodatabase**\n*(on disk)*"
+    },
+    {
+      "id": "nodeB7000000001",
+      "type": "text",
+      "x": 960,
+      "y": 840,
+      "width": 340,
+      "height": 75,
+      "text": "**structured JSON out**\n`{ ok, data | error }`"
+    },
+
+    {
+      "id": "grpC0000000001",
+      "type": "group",
+      "x": -60,
+      "y": 1040,
+      "width": 1760,
+      "height": 300,
+      "color": "2",
+      "label": "Add-in build & install  --  how the bridge gets into ArcGIS Pro"
+    },
+    {
+      "id": "nodeC1000000001",
+      "type": "text",
+      "x": 20,
+      "y": 1140,
+      "width": 320,
+      "height": 110,
+      "text": "**dotnet build -c Release**\n.NET 8, references Pro SDK dlls"
+    },
+    {
+      "id": "nodeC2000000001",
+      "type": "text",
+      "x": 400,
+      "y": 1140,
+      "width": 360,
+      "height": 110,
+      "text": "**PackageAddIn target**\nto `.esriAddinX` (zip)\n`Config.daml` + `Install/*.dll`"
+    },
+    {
+      "id": "nodeC3000000001",
+      "type": "text",
+      "x": 820,
+      "y": 1140,
+      "width": 360,
+      "height": 110,
+      "text": "**Documents\\ArcGIS\\AddIns\\ArcGISPro**\nPro scans this folder at startup"
+    },
+    {
+      "id": "nodeC4000000001",
+      "type": "text",
+      "x": 1240,
+      "y": 1140,
+      "width": 420,
+      "height": 110,
+      "color": "5",
+      "text": "**Pro startup -> Module1.Initialize()**\nto BridgeServer.Start()  *(listens on :5005)*"
+    }
+  ],
+  "edges": [
+    { "id": "edgeA12000000001", "fromNode": "nodeA1000000001", "fromSide": "bottom", "toNode": "nodeA2000000001", "toSide": "top" },
+    { "id": "edgeA23000000001", "fromNode": "nodeA2000000001", "fromSide": "bottom", "toNode": "nodeA3000000001", "toSide": "top" },
+    { "id": "edgeA34000000001", "fromNode": "nodeA3000000001", "fromSide": "bottom", "toNode": "nodeA4000000001", "toSide": "top" },
+    { "id": "edgeA45000000001", "fromNode": "nodeA4000000001", "fromSide": "bottom", "toNode": "nodeA5000000001", "toSide": "top" },
+    { "id": "edgeA56000000001", "fromNode": "nodeA5000000001", "fromSide": "bottom", "toNode": "nodeA6000000001", "toSide": "top" },
+    { "id": "edgeA61000000001", "fromNode": "nodeA6000000001", "fromSide": "left", "toNode": "nodeA1000000001", "toSide": "left", "color": "4", "label": "structured JSON back" },
+    { "id": "edgeA74000000001", "fromNode": "nodeA7000000001", "fromSide": "left", "toNode": "nodeA4000000001", "toSide": "right", "fromEnd": "none", "toEnd": "none" },
+
+    { "id": "edgeB12000000001", "fromNode": "nodeB1000000001", "fromSide": "bottom", "toNode": "nodeB2000000001", "toSide": "top" },
+    { "id": "edgeB23000000001", "fromNode": "nodeB2000000001", "fromSide": "bottom", "toNode": "nodeB3000000001", "toSide": "top" },
+    { "id": "edgeB34000000001", "fromNode": "nodeB3000000001", "fromSide": "bottom", "toNode": "nodeB4000000001", "toSide": "top", "color": "4", "label": "yes" },
+    { "id": "edgeB3a0000000001", "fromNode": "nodeB3000000001", "fromSide": "right", "toNode": "nodeB3a00000001", "toSide": "left", "color": "2", "label": "no" },
+    { "id": "edgeB3a4000000001", "fromNode": "nodeB3a00000001", "fromSide": "bottom", "toNode": "nodeB4000000001", "toSide": "right", "color": "2", "label": "with arcpy" },
+    { "id": "edgeB45000000001", "fromNode": "nodeB4000000001", "fromSide": "bottom", "toNode": "nodeB5000000001", "toSide": "top" },
+    { "id": "edgeB56000000001", "fromNode": "nodeB5000000001", "fromSide": "bottom", "toNode": "nodeB6000000001", "toSide": "top" },
+    { "id": "edgeB67000000001", "fromNode": "nodeB6000000001", "fromSide": "bottom", "toNode": "nodeB7000000001", "toSide": "top" },
+
+    { "id": "edgeC12000000001", "fromNode": "nodeC1000000001", "fromSide": "right", "toNode": "nodeC2000000001", "toSide": "left" },
+    { "id": "edgeC23000000001", "fromNode": "nodeC2000000001", "fromSide": "right", "toNode": "nodeC3000000001", "toSide": "left" },
+    { "id": "edgeC34000000001", "fromNode": "nodeC3000000001", "fromSide": "right", "toNode": "nodeC4000000001", "toSide": "left" },
+    { "id": "edgeC4A4000000001", "fromNode": "nodeC4000000001", "fromSide": "top", "toNode": "nodeA4000000001", "toSide": "bottom", "color": "5", "label": "starts the in-Pro listener" }
+  ]
+}
