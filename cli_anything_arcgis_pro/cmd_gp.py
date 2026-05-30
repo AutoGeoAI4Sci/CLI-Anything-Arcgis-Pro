@@ -36,6 +36,8 @@ def gp_cmd(tool, positional, kw_pairs, kwargs_json, extensions):
     """
     import arcpy
 
+    arcpy.env.overwriteOutput = True  # agents commonly re-run tools onto the same output
+
     checked = []
     for ext in extensions:
         status = arcpy.CheckOutExtension(ext)

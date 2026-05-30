@@ -15,3 +15,6 @@ live-bridge/ProSimpleMapExport/obj/
 # Local bridge runtime artifacts
 _bridge.log
 *_export.pdf
+
+# Generated demo sample data (rebuild with demos/setup_sample.py)
+demos/_sample/
