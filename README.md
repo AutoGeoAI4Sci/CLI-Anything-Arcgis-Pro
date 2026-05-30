@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/hero.png" alt="CLI-Anything · ArcGIS Pro — an AI agent driving ArcGIS Pro to make maps" width="100%">
+</p>
+
 # CLI-Anything · ArcGIS Pro
 
 > Making ArcGIS Pro agent-native. A companion harness for
