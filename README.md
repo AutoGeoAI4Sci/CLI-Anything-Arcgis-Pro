@@ -13,6 +13,12 @@ wraps ArcGIS Pro's **official ArcPy / Pro SDK** instead, in two complementary mo
 | **Headless CLI** | `.aprx` projects & geodatabases on disk | `pip` package, `arcpy` |
 | **Live bridge + MCP** | the **open** ArcGIS Pro session (you watch it work) | in-process .NET add-in + MCP server |
 
+## Demo
+
+A complete workflow driven live by an agent — **data → clip → analysis → finished map** — inside ArcGIS Pro through the MCP bridge:
+
+<video src="https://github.com/user-attachments/assets/bdf3b159-f2db-41bc-b7e3-ed05253062de" controls muted width="100%" style="max-height:360px"></video>
+
 ## Why two modes
 
 - The **headless CLI** is perfect for batch/automation: export 300 maps, run a
