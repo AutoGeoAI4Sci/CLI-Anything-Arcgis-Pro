@@ -15,7 +15,8 @@
   <img src="https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet&logoColor=white" alt=".NET 8">
   <img src="https://img.shields.io/badge/ArcGIS_Pro-3.4-2C7FB8" alt="ArcGIS Pro 3.4">
   <img src="https://img.shields.io/badge/MCP-ready-1f9d55" alt="MCP ready">
-  <a href="https://github.com/HKUDS/CLI-Anything/pull/318"><img src="https://img.shields.io/badge/CLI--Anything-PR%20%23318-orange" alt="Upstream PR #318"></a>
+  <a href="https://github.com/HKUDS/CLI-Anything/blob/main/public_registry.json"><img src="https://img.shields.io/badge/CLI--Anything-listed-2C7FB8?logo=github&logoColor=white" alt="Listed in CLI-Anything registry"></a>
+  <a href="https://glama.ai/mcp/servers/Jasper0122/CLI-Anything-Arcgis-Pro"><img src="https://glama.ai/mcp/servers/Jasper0122/CLI-Anything-Arcgis-Pro/badges/score.svg" alt="Glama MCP score"></a>
   <a href="https://github.com/Jasper0122/CLI-Anything-Arcgis-Pro/stargazers"><img src="https://img.shields.io/github/stars/Jasper0122/CLI-Anything-Arcgis-Pro?style=social" alt="Stars"></a>
 </p>
 
@@ -31,6 +32,8 @@
 ---
 
 > The **closed-source counterpart** to [CLI-Anything](https://github.com/HKUDS/CLI-Anything)'s QGIS harness. ArcGIS Pro is Esri's commercial GIS desktop app, so it can't be auto-generated from source — this wraps its official **ArcPy / ArcGIS Pro SDK** instead, in two complementary modes:
+>
+> ✅ **Listed in the official [CLI-Anything registry](https://github.com/HKUDS/CLI-Anything/blob/main/public_registry.json)** ([PR #318](https://github.com/HKUDS/CLI-Anything/pull/318), merged) and on the **[Glama MCP registry](https://glama.ai/mcp/servers/Jasper0122/CLI-Anything-Arcgis-Pro)**.
 
 | Mode | What it drives | How |
 |---|---|---|
