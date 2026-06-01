@@ -139,11 +139,13 @@ SKILL.md                   canonical agent skill definition
 
 ## 🤝 Contributing
 
-This is a standalone harness for [CLI-Anything](https://github.com/HKUDS/CLI-Anything) (registry PR [#318](https://github.com/HKUDS/CLI-Anything/pull/318)). Issues and PRs welcome — run the tests with ArcGIS Pro's Python:
+This is a standalone harness for [CLI-Anything](https://github.com/HKUDS/CLI-Anything) (listed in its [registry](https://github.com/HKUDS/CLI-Anything/blob/main/public_registry.json), merged in [#318](https://github.com/HKUDS/CLI-Anything/pull/318)). Issues and PRs welcome — run the tests with ArcGIS Pro's Python:
 
 ```bat
 "C:\Program Files\ArcGIS\Pro\bin\Python\envs\arcgispro-py3\python.exe" -m pytest tests/
 ```
+
+**Where to help:** see the [**Roadmap**](ROADMAP.md) — it maps every planned command to its ArcPy / Pro SDK API and marks tasks that need **no ArcGIS license** (🐍, e.g. the MCP server, tests, docs) and good first issues (🟢). The biggest open frontier is **cartographic authoring** (symbology, layout, layer management) — the part that makes ArcGIS Pro beat QGIS.
 
 ## 📄 License
 
