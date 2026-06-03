@@ -11,10 +11,14 @@ Where **CLI-Anything · ArcGIS Pro** is headed, and where you can help.
 Each item lists the **command / MCP tool** to add, its rough signature, and the underlying API on **both** execution paths (see *Two API worlds* below). Items are tagged:
 
 - 🟢 **good first issue** — small, self-contained, mentorship available
-- 🐍 **no ArcGIS license needed** — touches the stdlib MCP server / CLI wiring / tests / docs only
-- 🪟 **needs licensed ArcGIS Pro** — exercises real ArcPy or the live .NET bridge
+- 🔌 **MCP layer** — the stdlib `live-bridge/mcp_server.py`. **No ArcGIS license needed**, and the single best place to start — see [**Start here: the MCP layer**](#start-here-the-mcp-layer) below.
+- 🐍 **no ArcGIS license needed** — stdlib MCP server / CLI wiring / tests / docs only
+- 🪟 **needs a licensed ArcGIS Pro** — exercises real ArcPy (install Pro + a license, that's it)
+- 🏗️ **needs the add-in dev environment** — a *live*-path item: building `ProSimpleMapExport` needs **Visual Studio + the ArcGIS Pro SDK for .NET**, on top of a Pro license. Heavier setup than a 🪟 ArcPy item.
 
 If you want to contribute, open an issue (or comment on an existing one) before a large PR so we can align on the command shape.
+
+> **No ArcGIS license? Start with the MCP layer (🔌🐍).** It's pure-stdlib Python, it's where the agent-native value lives, and almost every capability below needs an MCP tool exposed for it. You can build and test the whole MCP path against a **mock bridge** — no ArcGIS Pro required. Jump to [**Start here: the MCP layer**](#start-here-the-mcp-layer).
 
 ---
 
@@ -54,6 +58,32 @@ The analysis + export half is in place.
 
 What's missing: the agent can run a buffer, but it can't yet **add the result to a map, symbolize it, compose a layout, or edit features** — that's the rest of this roadmap.
 
+> **Convention added after v0.1.0 — destructive ops are deny-by-default.** `gp` and `data calc` now route through `cli_anything_arcgis_pro/_safety.py`: any tool that deletes/truncates is blocked unless the caller opts in (`--allow-delete` / MCP `allow_delete=true` / `ARCGIS_CLI_ALLOW_DELETE=1`). See [#1](https://github.com/Jasper0122/CLI-Anything-Arcgis-Pro/pull/1). **Any new destructive command or MCP tool below (delete, delete-field, truncate, edit-with-delete) must call the same guard** — don't reintroduce the footgun #1 just closed. The `_safety` helpers are pure/backend-free, so cover them in `tests/test_core.py`.
+
+---
+
+## Start here: the MCP layer
+
+**If you have no ArcGIS license, this is your track.** `live-bridge/mcp_server.py` is pure-stdlib Python — it's the agent-facing surface that turns every capability below into something an LLM can call. It needs the most help and the least setup.
+
+```
+Agent ──JSON-RPC──► mcp_server.py ──HTTP──► in-Pro .NET bridge ──► live project
+        (🔌 here, no license)         (🏗️ add-in, gated)
+```
+
+The key unlock: **the MCP half of a feature is separable from the .NET half.** Defining a tool, its `inputSchema`, validating args, forwarding the right command to the bridge, shaping the response — all of that is pure Python you can build and test **against a mock bridge**, without ArcGIS Pro ever running. The `🏗️` .NET executor can land later.
+
+Concrete MCP work, roughly in dependency order:
+
+- 🔌 🐍 🟢 **Mock bridge for tests** — a tiny fake HTTP server that mimics the .NET bridge's responses, so the whole MCP path (`tools/list`, `tools/call`, error handling, the `allow_delete` guard) is testable with zero ArcGIS install. **Do this first — it unblocks every other MCP item and every contributor without a license.**
+- 🔌 🐍 🟢 **`tools/list` test** — feed the stdlib server a `tools/list` JSON-RPC request and assert the current tools come back with valid schemas. (`mcp_server.py` has no test today.)
+- 🔌 🐍 **Protocol completeness** — a proper `initialize` handshake with advertised `capabilities`, correct JSON-RPC error codes (`-32601` unknown method, `-32602` bad params), and graceful bridge-down handling instead of a raw traceback.
+- 🔌 🐍 **Richer tool schemas** — tighten each tool's `inputSchema` (required fields, enums, descriptions) so agents call them correctly the first time. Cheap, high-leverage for agent reliability.
+- 🔌 🐍 **Expose new capabilities as tools** — as Phase 1/2 land, add the matching MCP tool: `arcgis_add_data`, `arcgis_set_layer`, `arcgis_symbology`, `arcgis_select`, `arcgis_edit`. The Python tool definition + schema + mock-bridge test is 🐍 license-free; only the `🏗️` .NET command behind it needs the add-in. **You can ship and test the MCP side independently.**
+- 🔌 🐍 **Bridge auth** ([#3](https://github.com/Jasper0122/CLI-Anything-Arcgis-Pro/issues/3)) — the bridge's `127.0.0.1` listener has no auth/origin check. Add a shared-secret token the MCP server sends and the bridge verifies.
+
+Every `**MCP:**` line in the phases below is one of these — pick a capability, build its tool + schema + mock-tested forwarding, and it's a complete, mergeable contribution even before the live executor exists.
+
 ---
 
 ## Phase 1 — Cartographic authoring (the differentiator) → v0.2.0
@@ -76,8 +106,9 @@ Apply renderers so the map actually communicates.
 
 - **Commands:** `map symbology graduated <layer> --field --classes --ramp`, `map symbology unique <layer> --field`, `map symbology simple <layer> --color`, `map apply-lyrx <layer> <lyrx>`
 - Headless (standard 4-step): `sym = lyr.symbology` → `sym.updateRenderer('GraduatedColorsRenderer')` → set `sym.renderer.classificationField`, `breakCount`, `colorRamp` → `lyr.symbology = sym`. For `unique`: `sym.updateRenderer('UniqueValueRenderer')` then `sym.renderer.fields = [...]`. Template path: `arcpy.management.ApplySymbologyFromLayer`.
+  - ⚠️ **`colorRamp` gotcha:** you can't assign a ramp *name string* — fetch the object first: `sym.renderer.colorRamp = aprx.listColorRamps('Viridis')[0]`. Map the `--ramp` arg to a `listColorRamps()` lookup.
 - Supported renderers: `SimpleRenderer`, `GraduatedColorsRenderer`, `GraduatedSymbolsRenderer`, `UnclassedColorsRenderer`, `UniqueValueRenderer`.
-- Live (.NET): CIM route — `layer.GetDefinition()` → swap `CIMFeatureLayer.Renderer` (`CIMClassBreaksRenderer` / `CIMUniqueValueRenderer`) → `SetDefinition()`.
+- Live (.NET): **prefer the high-level path** — `featureLayer.CreateRenderer(new GraduatedColorsRendererDefinition(field, classes, rampStyle))` (or `UniqueValueRendererDefinition`) → `featureLayer.SetRenderer(renderer)`, all inside `QueuedTask`. Only drop to the CIM route (`GetDefinition()` → swap `CIMFeatureLayer.Renderer` → `SetDefinition()`) for control the definition classes don't expose. Don't start with raw CIM surgery.
 - **MCP:** `arcgis_symbology`
 - **Acceptance:** a quantitative field renders as graduated colors; a categorical field renders as unique values; both visible in the live session and in an exported PDF.
 
@@ -98,6 +129,8 @@ Apply renderers so the map actually communicates.
 ## Phase 2 — Feature editing & selection (the write half) → v0.3.0
 
 "Operate ArcGIS" means CRUD, not just read. Today we have `data query` (read) + `data calc` (field calc) only.
+
+> ⚠️ **This whole phase is destructive — wire it into `_safety`.** `data delete`, the delete half of `data update`, `delete-field`, and any delete-capable MCP `arcgis_edit` must go through the deny-by-default guard (`_safety.guard_tool` / `guard_expr`, opt-in via `--allow-delete` / `allow_delete`). This is the convention from [#1](https://github.com/Jasper0122/CLI-Anything-Arcgis-Pro/pull/1); a CRUD command that can wipe a feature class silently is exactly what it prevents.
 
 ### 2.1 Feature CRUD 🪟
 - **Commands:** `data insert <fc> --json`, `data update <fc> --where --set`, `data delete <fc> --where`
@@ -138,10 +171,11 @@ Apply renderers so the map actually communicates.
 
 These don't need ArcGIS Pro and are great entry points:
 
-- 🐍 🟢 **CI** — GitHub Actions running `test_core.py` (already backend-free) on each push, plus a tests badge.
-- 🐍 🟢 **MCP server test** — feed the stdlib server a `tools/list` JSON-RPC request and assert the 5 tools come back. (`mcp_server.py` currently has no test.)
+- 🐍 🟢 **CI** — GitHub Actions running `tests/test_core.py` on each push, plus a tests badge. The suite is already backend-free and **grew in [#1](https://github.com/Jasper0122/CLI-Anything-Arcgis-Pro/pull/1)** (the `_safety` guard now has coverage) — it just isn't run automatically yet. **Highest-value health item.**
+- 🔌 🐍 🟢 **MCP server tests** — see [Start here: the MCP layer](#start-here-the-mcp-layer); the mock bridge + `tools/list` test live there.
 - 🐍 🟢 **Docs** — quickstart recipes, a worked "data → map" example, expand `SKILL.md`.
-- 🐍 🟢 **Mock-based CLI tests** — verify command wiring without a Pro license.
+- 🐍 🟢 **Mock-based CLI tests** — verify command wiring without a Pro license (same mock-bridge idea, applied to the CLI).
+- 🏗️ **Guard the .NET executor** ([#2](https://github.com/Jasper0122/CLI-Anything-Arcgis-Pro/issues/2)) — mirror the `_safety` delete/truncate guard inside `BridgeServer.cs`, so direct bridge calls can't bypass it.
 
 ---
 
@@ -153,4 +187,4 @@ Raster & mosaic datasets · 3D scenes · publishing to ArcGIS Online / web maps 
 
 ## Contributing
 
-Heads-up: ArcGIS Pro is Esri's commercial, **Windows-only** desktop app, so the 🪟 items need a licensed install. But the 🐍 items (MCP protocol layer, tests, docs) need **none** — and "just try it and file an issue where it breaks" is genuinely valuable. See the **Contributing** section of the [README](README.md). First-timers welcome on anything tagged 🟢.
+Heads-up: ArcGIS Pro is Esri's commercial, **Windows-only** desktop app, so 🪟 items need a licensed install and 🏗️ items also need the .NET add-in dev environment (Visual Studio + ArcGIS Pro SDK). But the 🔌 🐍 items — the **MCP layer**, tests, and docs — need **none of that**, and they're where the agent-native value lives. **If you don't have ArcGIS Pro, go to [Start here: the MCP layer](#start-here-the-mcp-layer)** — build the mock bridge or a tool's schema and you've made a real, testable contribution without ever installing Pro. "Just try it and file an issue where it breaks" is genuinely valuable too. See the **Contributing** section of the [README](README.md). First-timers welcome on anything tagged 🟢.
