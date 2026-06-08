@@ -86,15 +86,15 @@ TOOLS = [
                 "out": {
                     "type": "string",
                     "description": (
-                        "Absolute return path for output PDF. "
+                        "Absolute output path for the PDF. "
                         r"For example C:\temp\map.pdf"
                     ),
                 },
                 "layout": {
                     "type": "string",
                     "description": (
-                        "Name of layout to export (Optional) "
-                        "If left empty, default to active layout or the first layout if no currently active layout"
+                        "Name of the layout to export (optional). "
+                        "If omitted, the active layout is used, or the first layout if none is active."
                     ),
                 },
                 "dpi": {
@@ -102,7 +102,7 @@ TOOLS = [
                     "enum": [72, 96, 150, 200, 300, 400, 600, 1200],
                     "default": 300,
                     "description": (
-                        "Export resolution in DPI. Defaulted to 300"
+                        "Export resolution in DPI. Defaults to 300."
                     )
                 },
             },
@@ -139,14 +139,14 @@ TOOLS = [
     {
         "name": "arcgis_query",
         "description": (
-            "Queries attributes of the feature layer of the currently live ArcGIS project and returns in structured rows (excluding geometry). "
-            "Supports filtering through 'where' parameter and limiting returned row counts."
+            "Query attributes of a feature layer in the live ArcGIS Pro project; returns structured rows (geometry excluded). "
+            "Supports filtering via the 'where' parameter and limiting the number of returned rows."
         ),
         "inputSchema": {
             "type": "object",
             "properties": {
-                "layer": {"type": "string", "description": "The name of target Feature Layer. "},
-                "where": {"type": "string", "description": "Optional: SQL query 'where' parameter used to filter the features"},
+                "layer": {"type": "string", "description": "The name of the target feature layer."},
+                "where": {"type": "string", "description": "Optional SQL 'where' clause used to filter the features."},
                 "map": {
                     "type": "string",
                     "description": (
@@ -155,7 +155,7 @@ TOOLS = [
                     )
                 },
                 "limit": {
-                    "type": "integer", 
+                    "type": "integer",
                     "default": 50,
                     "minimum": 0,
                     "description": (
@@ -174,7 +174,7 @@ TOOLS = [
             "Execute any ArcGIS geoprocessing tool on the live project. "
             "(Supports the entire ArcToolbox: analysis, management, conversion, sa, etc.) "
             "Output layers will be automatically added to the current active map. (This process is visible to the user). "
-            "Specify tool usage utilizing dot notation ('toolbox_alias.Toolname'). For example: 'analysis.Buffer', 'management.Clip'; "
+            "Specify the tool using dot notation ('toolbox_alias.Toolname'), e.g. 'analysis.Buffer', 'management.Clip'. "
             "The 'params' field is an ordered array of positional argument strings. "
             "The ordering must exactly match the tool's official ArcToolbox function signature. "
             "Example: tool='analysis.Buffer', params=['roads','roads_buf','100 Meters']."
@@ -190,15 +190,15 @@ TOOLS = [
                     "type": "array",
                     "items": {"type": "string"},
                     "description": (
-                        "An ordered array of positional argument strings that follow the ordering of the tool's official ArcToolbox function signature. "
-                        "Inputs and outputs are strongly recommended to use absolute dataset paths. (Example: C:\\...\\x.gdb\\fc) "
+                        "An ordered array of positional argument strings, following the tool's official ArcToolbox function signature. "
+                        "Inputs and outputs should use absolute dataset paths (e.g. C:\\...\\x.gdb\\fc), "
                         "as short layer names are unreliable in the background geoprocessing environment. "
                         "Distance or value parameters should include units (e.g., '500 Meters') when applicable."
                     ),
                 },
                 "allow_delete": {
                     "type": "boolean",
-                    "default": False, 
+                    "default": False,
                     "description": (
                         "Safety opt-in. Destructive tools (Delete*/Truncate*) are BLOCKED by "
                         "default to protect shapefiles, feature classes and geodatabases. Set "
@@ -227,16 +227,16 @@ TOOLS = [
                     "type": "string",
                     "enum": ["graduated", "unique"],
                     "description": (
-                        "The types of symbology renderers to apply. "
-                        "'graduated' uses numerical field for classified color styling. "
-                        "'unique' assigns distinct color to each unique categorical value."
+                        "The type of symbology renderer to apply. "
+                        "'graduated' uses a numerical field for classified color styling. "
+                        "'unique' assigns a distinct color to each unique categorical value."
                     )
                 },
                 "field": {
                     "type": "string",
                     "description": (
                         "The name of the attribute field used for rendering. "
-                        "'graduated' required a numerical field; "
+                        "'graduated' requires a numerical field; "
                         "'unique' requires a categorical field."
                     )
                 },
@@ -261,24 +261,24 @@ TOOLS = [
                         "StandardDeviation",
                     ],
                     "description": (
-                        "The classification methods: "
-                        "Defaults to NaturalBreaks - Good for unevenly distributed data. "
-                        "Equal Interval - Good for Uniform ranges/percentages. "
-                        "Quantile - Good for well-distributed or linear data. "
-                        "GeometricInterval - Good for Highly skewed data. "
-                        "StandardDeviation - Good for highlighting anomalies in the data. "
+                        "The classification method (defaults to NaturalBreaks). "
+                        "NaturalBreaks - good for unevenly distributed data. "
+                        "EqualInterval - good for uniform ranges/percentages. "
+                        "Quantile - good for well-distributed or linear data. "
+                        "GeometricInterval - good for highly skewed data. "
+                        "StandardDeviation - good for highlighting anomalies in the data. "
                         "Ignored for 'unique' rendering."
                     )
                 },
                 "ramp": {
-                    "type": "string", 
+                    "type": "string",
                     "description": (
-                        "The name of the color ramp to apply (Optional). "
-                        "Example: 'Viridis'"
+                        "The name of the color ramp to apply (optional). "
+                        "Example: 'Viridis'."
                     )
                 },
                 "map": {
-                    "type": "string", 
+                    "type": "string",
                     "description": (
                         "The name of the map (Optional) "
                         "If left empty, default to current active map and if no map is currently active, fall back to the first map."
